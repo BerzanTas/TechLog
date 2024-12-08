@@ -1,0 +1,7 @@
+Django
+djangorestframework
+Markdown
+django-environ
+mysqlclient
+Pillow
+gunicorn

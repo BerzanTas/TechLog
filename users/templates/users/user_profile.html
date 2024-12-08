@@ -1,0 +1,59 @@
+{% extends "layout.html" %}
+
+{% block maincontent %}
+<div class="profile_section">
+    <img src="{{ '/media/user.png' }}" alt="profile_picture">
+    <div class="profile_info">
+        <h2>{{ profile_user.username }}</h2>
+        <p>Joined {{ profile_user.date_joined }}</p>
+    </div>
+</div>
+<h1 class="page-title" id="ptitle"></h1>
+<div id="solutions" class="solutions-container">
+<!-- Solutions will be dynamically injected here -->
+</div>
+{% endblock maincontent %}
+{% block js %}
+    <script>
+        const username = window.location.pathname.split('/')[1];
+        const apiBaseURL = `/api/solutions/${username}`;
+        const solutionsContainer = document.getElementById('solutions');
+        const siteTitle = document.getElementById('ptitle');
+
+        const fetchSolutions = async () => {
+            try {
+                const response = await fetch(apiBaseURL);
+                const solutions = await response.json();
+
+                solutionsContainer.innerHTML = '';
+                
+                if (solutions.length === 0) {
+                    // Jeśli użytkownik nie ma żadnych rozwiązań
+                    solutionsContainer.innerHTML = `
+                        <p>${username} has not published any solutions yet.</p>
+                    `;
+                } else {
+                    solutions.forEach(solution => {
+                        const solutionElement = document.createElement('div');
+                        siteTitle.innerHTML = "{{ profile_user.username}}'s solutions"
+                        solutionElement.className = 'solution-card';
+
+                        solutionElement.innerHTML = `
+                            <h2 class="solution-title">
+                                <a href="/${solution.author}/${solution.slug}/" class="solution-link">${solution.title}</a>
+                            </h2>
+                            <p class="solution-date">Posted on: ${new Date(solution.published_date).toLocaleDateString()}</p>
+                            <p class="solution-snippet">${solution.author}</p>
+                            <p class="solution-snippet">${solution.snippet}</p>
+                        `;
+                        solutionsContainer.appendChild(solutionElement);
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching solutions:', error);
+            }
+        };
+
+        fetchSolutions();
+    </script>
+{% endblock js %}

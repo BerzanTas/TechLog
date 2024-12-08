@@ -1,0 +1,176 @@
+{% extends "layout.html" %}
+
+{% block maincontent %}
+    <div class="create_solution">
+        <p class="form_title">Create a new Solution</p>
+        <form action="{% url 'solutions:create' %}" id="solution-form" enctype="multipart/form-data" method="POST">
+            {% csrf_token %}
+            
+            <input type="text" placeholder="Title" id="title">
+            <label for="thumb"> Your banner</label>
+            <input type="file" id="thumb" name="thumb" accept=".png,.jpg,.jpeg,.svg" default:"">
+
+            <!-- Nowe pole dla tagów -->
+            <label for="tags">Tags (comma-separated):</label>
+            <input type="text" id="tags" placeholder="e.g., Python, Django, Web Development">
+            
+            <!-- Przyciski do przełączania trybu -->
+            <div class="toggle_buttons">
+                <button type="button" id="edit-btn" class="toggle-btn active">Edit</button>
+                <button type="button" id="preview-btn" class="toggle-btn">Preview</button>
+            </div>
+            
+            <!-- Sekcja do edycji (textarea) -->
+            <div id="edit-mode">
+                <textarea name="content" id="content" rows="10" placeholder="Write your solution..."></textarea>
+            </div>
+            
+            <!-- Sekcja do podglądu (markdown-preview) -->
+            <div id="preview-mode" style="display: none;">
+                <h3></h3>
+                <div id="markdown-preview"></div>
+            </div>
+            
+            <button type="submit" class="form_button">Publish</button>
+        </form>
+    </div>
+{% endblock maincontent %}
+
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/marked@3.0.0/marked.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const contentInput = document.getElementById('content');
+        const previewDiv = document.getElementById('markdown-preview');
+        const editModeDiv = document.getElementById('edit-mode');
+        const previewModeDiv = document.getElementById('preview-mode');
+        const editBtn = document.getElementById('edit-btn');
+        const previewBtn = document.getElementById('preview-btn');
+    
+        // Funkcja do przełączania między trybem edycji a podglądem
+        function toggleMode(mode) {
+            if (mode === 'edit') {
+                editModeDiv.style.display = 'block';
+                previewModeDiv.style.display = 'none';
+                editBtn.classList.add('active');
+                previewBtn.classList.remove('active');
+            } else if (mode === 'preview') {
+                editModeDiv.style.display = 'none';
+                previewModeDiv.style.display = 'block';
+                previewBtn.classList.add('active');
+                editBtn.classList.remove('active');
+            }
+        }
+    
+        // Nasłuchiwanie na przycisk "Edit" i "Preview"
+        editBtn.addEventListener('click', (event) => {
+            event.preventDefault(); // Zapobiegamy domyślnej akcji, jeśli to link
+            toggleMode('edit');
+        });
+    
+        previewBtn.addEventListener('click', (event) => {
+            event.preventDefault(); // Zapobiegamy domyślnej akcji, jeśli to link
+            toggleMode('preview');
+        });
+    
+        // Generowanie podglądu markdown w czasie rzeczywistym
+        contentInput.addEventListener('input', () => {
+            const markdownText = contentInput.value;
+            previewDiv.innerHTML = marked(markdownText);
+        });
+    
+        // Przełączanie na tryb "edit" na początku
+        toggleMode('edit');
+    });
+
+    const apiBaseURL = '/api/solutions/'
+    const solutionForm = document.getElementById('solution-form');
+    const titleInput = document.getElementById('title');
+    const contentInput = document.getElementById('content');
+    const fileInput = document.getElementById('thumb');
+    const tagsInput = document.getElementById('tags');
+
+    solutionForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+    
+        const formData = new FormData();
+        formData.append('title', titleInput.value);
+        formData.append('content', contentInput.value);
+        formData.append('tags', tagsInput.value);
+        if (fileInput.files[0]) {
+            formData.append('thumb', fileInput.files[0]);
+        }
+    
+        try {
+            const response = await fetch(apiBaseURL, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken') // Getting CSRF token
+                },
+                body: formData,
+            });
+    
+            if (response.ok) {
+                const data = await response.json();
+                // Redirect to created solution
+                window.location.href = data.detail_url;
+            } else {
+                const errorData = await response.json();
+                console.error('Error:', errorData);
+                alert('Failed to create solution');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+    
+    // Funkcja pomocnicza do pobierania CSRF tokena (jeśli używasz CSRF)
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    document.getElementById('thumb').addEventListener('change', function (event) {
+        const file = event.target.files[0];
+    
+        if (file) {
+            const img = new Image();
+            img.src = URL.createObjectURL(file);
+    
+            img.onload = function () {
+                const width = img.width;
+                const height = img.height;
+                const aspectRatio = width / height;
+    
+                // Dopuszczalne proporcje banera
+                if (aspectRatio < 3 || aspectRatio > 5) {
+                    alert('Image must have an aspect ratio between 3:1 and 5:1.');
+                    event.target.value = ''; // Reset file input
+                    return;
+                }
+    
+                // Minimalna szerokość
+                if (width < 1000) {
+                    alert('Image must be at least 1000 pixels wide.');
+                    event.target.value = ''; // Reset file input
+                    return;
+                }
+            };
+        }
+    });
+    
+    
+</script>
+{% endblock js %}

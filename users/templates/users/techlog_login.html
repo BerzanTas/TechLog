@@ -1,0 +1,43 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechLog</title>
+    <link rel="stylesheet" href="{% static 'users/css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="overlay">
+            <div id="logo">
+                <h1 class="title">TECHLOG</h1>
+                <p class="subtitle">cosmic problems, simple solutions</p>
+            </div>
+            <form class="login_form" method="post">
+                {% csrf_token %}
+                <input type="text" placeholder="Username" name="username" required>
+                <input type="password" placeholder="Password" name="password" required>
+                <div class="buttons">
+                    <button type="submit" class="button1" id="login_button">Login</button>
+                    <a href="{% url 'users:reset_password' %}" class="reset-link">Reset Password</a>                    
+                </div>
+                {% if request.GET.next %}
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+                {% endif %}
+                {% if messages %}
+                    <ul>
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </form>
+            <div class="buttons">
+                <button class="button2" id="signup_button" onclick="location.href='{% url 'users:signup' %}'">Sign Up</button>
+                <a href="{% url 'solutions:solution-list' %}" class="guest-link">Browse as a Guest</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

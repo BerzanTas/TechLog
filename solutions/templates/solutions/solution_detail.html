@@ -1,0 +1,340 @@
+{% extends "layout.html" %}
+
+{% block maincontent %}
+<div class="solution-detail">
+    <div class="solution">
+        {% if solution.thumb %}
+        <img src="{{ solution.thumb.url }}" alt="thumbnail">
+        <div class="sol_header">
+        {% else %}
+        <div class="sol_header" style="margin-top: 0px;">
+        {% endif %}
+            <div id="title-buttons">
+                <h1>{{ solution.title }}</h1>
+                {% if solution.author == user %}
+                    <div id="sol_options">
+                        <button id="edit-solution">Edit</button>
+                        <button id="delete-solution">Delete</button>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="sol_details">
+                <p>Author <a href="/{{ solution.author }}">{{ solution.author }}</a></p>
+                <p>Published: {{ solution.published_date}}</p>
+                <p>Last modified: {{ solution.published_date}}</p>
+                <p>Views 187</p>
+            </div>
+        </div>
+        <div class="markdown-content" id="solution-content">{{ solution.content_html|safe}}</div>
+
+        <!-- Edit form, initially hidden -->
+        <div id="edit-form" style="display:none;">
+            <div class="toggle_buttons">
+                <button type="button" id="edit-btn" class="toggle-btn active">Edit</button>
+                <button type="button" id="preview-btn" class="toggle-btn">Preview</button>
+            </div>
+            <div id="edit-mode">
+                <textarea name="content" id="edit-content-input" rows="10" placeholder="Write your solution..."></textarea>
+            </div>
+            <div id="preview-mode" style="display: none;">
+                <h3></h3>
+                <div id="markdown-preview"></div>
+            </div>
+            <div class="edit-buttons">
+                <button id="save-edit" class="toggle-btn">Save</button>
+                <button id="cancel-edit" class="toggle-btn">Cancel</button>
+            </div>
+        </div>
+        {% if solution.tags_list %}
+        <div class="solution-tags" style="margin-top: 50px;">
+            {% for tag in solution.tags_list %}
+                <span class="solution-tag">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        {% endif %} 
+    </div>
+    <div id="comments-section">
+        <h2>Comments</h2>
+        <div id="comments-list">
+            <!-- Comments will be loaded here dynamicly -->
+        </div>
+
+        {% if user.is_authenticated %}
+        <form id="comment-form">
+            <div id="edit-mode">
+                <textarea style="height: 50px;" id="comment-content" placeholder="Add a comment..." required></textarea>
+            </div>
+            <button style="margin-top: 5px;" class="form_button" type="submit">Post Comment</button>
+        </form>
+        {% else %}
+        <p>You must be logged in to post a comment.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock maincontent %}
+{% block js %}
+<script src="https://cdn.jsdelivr.net/npm/marked@3.0.0/marked.min.js"></script>
+<script>
+    const currentUser = "{{ user.username }}";  // Username of user
+    const solutionAuthor = "{{ solution.author.username }}"; // Username of solutions owner
+    const solutionId = "{{ solution.id }}"; // ID of the current solution
+    const commentsApiUrl = `/api/comments/?solution=${solutionId}`;
+    const commentForm = document.getElementById('comment-form');
+    const commentContentInput = document.getElementById('comment-content');
+    const commentsList = document.getElementById('comments-list');
+
+    // Function for loading comments
+    async function loadComments() {
+        try {
+            const response = await fetch(commentsApiUrl);
+            const comments = await response.json();
+            commentsList.innerHTML = ''; // Clear comment list
+
+            if (comments.length === 0) {
+                // Wyświetlenie komunikatu, jeśli brak komentarzy
+                const noCommentsMessage = document.createElement('p');
+                noCommentsMessage.textContent = "There are no comments yet. Be the first to comment!";
+                noCommentsMessage.className = "no-comments-message";
+                commentsList.appendChild(noCommentsMessage);
+                return;
+            }
+    
+            comments.forEach(comment => {
+                const commentEl = document.createElement('div');
+                commentEl.className = 'comment-card';
+                commentEl.classList.add('comment');
+                commentEl.id = `comment-${comment.id}`; // Nadaj unikalne ID komentarzowi
+    
+                // Zbudowanie nagłówka komentarza
+                const commentHeader = document.createElement('div');
+                commentHeader.className = 'comment-header';
+                commentHeader.innerHTML = `
+                    <div class="comment-info">
+                        <p class="comment-author"><strong><a href="#">${comment.author}</a></strong></p>
+                        <p>${new Date(comment.created_date).toLocaleString()}</p>
+                    </div>
+                `;
+    
+                // If the user is the owner of solution or comment, then show delete button
+                if (comment.author === currentUser || solutionAuthor === currentUser) {
+                    const deleteButton = document.createElement('button');
+                    deleteButton.classList.add('delete-comment');
+                    deleteButton.textContent = 'Delete';
+                    deleteButton.addEventListener('click', function() {
+                        deleteComment(comment.id);
+                    });
+    
+                    commentHeader.appendChild(deleteButton);
+                }
+    
+                commentEl.appendChild(commentHeader);
+    
+                // Comment body
+                const commentBody = document.createElement('div');
+                commentBody.className = 'comment-body';
+                commentBody.innerHTML = `<p>${comment.content}</p>`;
+                commentEl.appendChild(commentBody);
+    
+                commentsList.appendChild(commentEl);
+            });
+        } catch (error) {
+            console.error('Error loading comments:', error);
+        }
+    }
+
+    // Funkcja managing comment posting
+    async function postComment(content) {
+        try {
+            const response = await fetch('/api/comments/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}', // Django CSRF Token
+                },
+                body: JSON.stringify({
+                    solution: solutionId,
+                    content: content,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Error posting comment');
+            }
+
+            commentContentInput.value = ''; // Wyczyść pole tekstowe
+            loadComments(); // Odśwież listę komentarzy
+        } catch (error) {
+            console.error('Error posting comment:', error);
+        }
+    }
+
+    // Obsługa przesyłania formularza
+    if (commentForm) {
+        commentForm.addEventListener('submit', event => {
+            event.preventDefault(); // Zapobiegaj przeładowaniu strony
+            const content = commentContentInput.value.trim();
+            if (content) {
+                postComment(content);
+            }
+        });
+    }
+
+    // Funkcja do usuwania komentarza
+    async function deleteComment(commentId) {
+        if (confirm('Are you sure you want to delete this comment?')) {
+            try {
+                // Wysłanie żądania DELETE do API
+                const response = await fetch(`/api/comments/${commentId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken'),  // Obsługuje CSRF
+                    }
+                });
+
+                if (response.ok) {
+                    // Usunięcie komentarza z DOM
+                    const commentElement = document.getElementById(`comment-${commentId}`);
+                    commentElement.remove();  // Usuwamy element z DOM
+
+                    // Opcjonalnie możesz ponownie załadować komentarze, aby upewnić się, że lista jest zaktualizowana
+                    // loadComments();
+                } else {
+                    alert('Failed to delete the comment');
+                }
+            } catch (error) {
+                console.error('Error deleting comment:', error);
+                alert('An error occurred while deleting the comment');
+            }
+        }
+    }
+
+    const solutionContentHtml = document.getElementById('solution-content');
+    const editForm = document.getElementById('edit-form');
+    const editContentInput = document.getElementById('edit-content-input');
+    const editButton = document.getElementById('edit-solution');
+    const saveEditButton = document.getElementById('save-edit');
+    const cancelEditButton = document.getElementById('cancel-edit');
+
+    // Show the edit form when the user clicks on the "edit" button
+    editButton.addEventListener('click', () => {
+        solutionContentHtml.style.display = 'none'; // Hide current content
+        editForm.style.display = 'block'; // Show the edit form
+        editContentInput.value = {{ solution_content|safe }}; // Populate the textarea with current Markdown content
+    });
+
+    // Cancel editing and hide the edit form
+    cancelEditButton.addEventListener('click', () => {
+        editForm.style.display = 'none'; // Hide the edit form
+        solutionContentHtml.style.display = 'block'; // Show current content again
+    });
+
+    // Save the edited content via PUT request to the API
+    saveEditButton.addEventListener('click', async () => {
+        const newContent = editContentInput.value.trim();
+        if (newContent) {
+            try {
+                const response = await fetch(`/api/solutions/${solutionId}/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}', // CSRF Token
+                    },
+                    body: JSON.stringify({
+                        title: "{{ solution.title }}",  // Przekazanie tytułu, nawet jeśli nie zmieniasz
+                        content: newContent,  // Markdown content
+                    }),
+                });
+    
+                if (!response.ok) {
+                    // Jeśli API zwróciło błąd, wyświetl szczegóły
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
+                    alert('Error saving solution: ' + (errorData.detail || errorData.message || 'Unknown error'));
+                    return;
+                }
+    
+                // Po zapisaniu, zaktualizowanie treści w DOM
+                solutionContentHtml.innerHTML = marked(newContent); // Aktualizacja treści
+                solutionContentHtml.style.display = 'block'; // Pokazanie zaktualizowanej treści
+                editForm.style.display = 'none'; // Ukrycie formularza edycji
+            } catch (error) {
+                console.error('Error saving content:', error);
+                alert('An error occurred while saving the solution');
+            }
+        }
+    });
+    
+
+    document.getElementById('delete-solution').addEventListener('click', async () => {
+        if (confirm('Are you sure you want to delete this solution?')) {
+            try {
+                const response = await fetch(`/api/solutions/${solutionId}/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                    },
+                });
+    
+                if (response.ok) {
+                    alert('Solution deleted successfully');
+                    window.location.href = '/'; // Przekierowanie na stronę główną
+                } else {
+                    alert('Failed to delete the solution');
+                }
+            } catch (error) {
+                console.error('Error deleting solution:', error);
+            }
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const previewDiv = document.getElementById('markdown-preview');
+        const editModeDiv = document.getElementById('edit-mode');
+        const previewModeDiv = document.getElementById('preview-mode');
+        const editBtn = document.getElementById('edit-btn');
+        const previewBtn = document.getElementById('preview-btn');
+    
+        // Funkcja do przełączania między trybem edycji a podglądem
+        function toggleMode(mode) {
+            if (mode === 'edit') {
+                editModeDiv.style.display = 'block';
+                previewModeDiv.style.display = 'none';
+                editBtn.classList.add('active');
+                previewBtn.classList.remove('active');
+            } else if (mode === 'preview') {
+                editModeDiv.style.display = 'none';
+                previewModeDiv.style.display = 'block';
+                previewBtn.classList.add('active');
+                editBtn.classList.remove('active');
+            }
+        }
+    
+        // Nasłuchiwanie na przycisk "Edit" i "Preview"
+        editBtn.addEventListener('click', (event) => {
+            event.preventDefault(); // Zapobiegamy domyślnej akcji, jeśli to link
+            toggleMode('edit');
+        });
+    
+        previewBtn.addEventListener('click', (event) => {
+            event.preventDefault(); // Zapobiegamy domyślnej akcji, jeśli to link
+            const markdownText = editContentInput.value;
+            previewDiv.innerHTML = marked(markdownText);
+            toggleMode('preview');
+        });
+    
+        // Przełączanie na tryb "edit" na początku
+        toggleMode('edit');
+    });
+
+    // Function for gettin CSRF token
+    function getCookie(name) {
+        const value = '; ' + document.cookie;
+        const parts = value.split('; ' + name + '=');
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    // Load comments on start
+    document.addEventListener('DOMContentLoaded', loadComments);
+</script>
+{% endblock js %}

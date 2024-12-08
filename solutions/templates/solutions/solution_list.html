@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block maincontent %}
+<h1 class="page-title">Latest Solutions</h1>
+<div id="solutions" class="solutions-container">
+<!-- Solutions will be dynamically injected here -->
+</div>
+{% endblock maincontent %}
+{% block js %}
+    <script>
+        const apiBaseURL = '/api/solutions/';
+        const solutionsContainer = document.getElementById('solutions');
+
+        const fetchSolutions = async () => {
+            try {
+                const response = await fetch(apiBaseURL);
+                const solutions = await response.json();
+
+                solutionsContainer.innerHTML = '';
+                solutions.forEach(solution => {
+                    const tagsString = solution.tags || '';  // Jeśli tags jest null lub undefined, użyj pustego stringa
+                    const tags = tagsString.split(',').map(tag => tag.trim()); // Rozdzielanie stringa po przecinkach i usuwanie zbędnych spacji
+                    const tagsHTML = tags.length > 0
+                        ? tags.map(tag => `<span class="solution-tag">${tag}</span>`).join('')
+                        : '<span class="no-tags">No tags available</span>';
+
+                    const solutionElement = document.createElement('div');
+                    solutionElement.className = 'solution-card';
+
+                    solutionElement.innerHTML = `
+                        <h2 class="solution-title">
+                            <a href="${solution.author}/${solution.slug}/" class="solution-link">${solution.title}</a>
+                        </h2>
+                        <p class="solution-date">Posted on: ${new Date(solution.published_date).toLocaleDateString()}</p>
+                        <p class="solution-author">by ${solution.author}</p>
+                        <p class="solution-snippet">${solution.snippet}</p>
+                        <div class="solution-tags">
+                            ${tagsHTML}
+                        </div>
+                    `;
+                    solutionsContainer.appendChild(solutionElement);
+                });
+            } catch (error) {
+                console.error('Error fetching solutions:', error);
+            }
+        };
+
+        fetchSolutions();
+    </script>
+{% endblock js %}
+

@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechLog</title>
+    <link rel="stylesheet" href="{% static 'users/css/style.css' %}">
+</head>
+<body>
+    <div class="container">
+        <div class="overlay2">
+            <div id="logo">
+                <h1 class="title">TECHLOG</h1>
+                <p class="subtitle">cosmic problems, simple solutions</p>
+            </div>
+            <form class="signup_form" method="post">
+                {% csrf_token %}
+                <input type="email" placeholder="E-mail" name="email" required>
+                <input type="text" placeholder="Username" name="username" required>
+                <input type="password" placeholder="Password" name="password" required>
+                <input type="password" placeholder="Confirm password" name="confirmpassword" required>
+                <div class="buttons">
+                    <button class="button1" type="submit" id="signup_button">Signup</button>                
+                </div>
+                {% if request.GET.next %}
+                    <input type="hidden" name="next" value="{{ request.GET.next }}">
+                {% endif %}
+                {% if messages %}
+                    <ul>
+                        {% for message in messages %}
+                            <li>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+</body>
+</html>
