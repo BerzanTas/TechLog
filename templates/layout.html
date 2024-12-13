@@ -4,58 +4,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechLog Solutions</title>
+    <title>TechLog</title>
     <link rel="stylesheet" href="{% static 'solutions/css/style.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'solutions/media/favicon.ico' %}"/>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3547488460887249"
+     crossorigin="anonymous"></script>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="logo">
-            <a href="{% url 'solutions:solution-list' %}" class="logo-text">TECHLOG</a>
-        </div>
-        <div class="navbar-center">
-            <form class="search-form" action="/search/" method="get">
-                <input type="text" name="q" placeholder="Search solutions..." class="search-input">
-            </form>
-        </div>
-        <div class="navbar-right">
-            {% if user.is_authenticated %}
-            <div class="dropdown">
-                <img src="{{ '/media/user.png' }}" class="dropbtn">
-                <div class="dropdown-content">
-                    <a href="/{{ request.user.username }}">Profile</a>
-                    <a href="/logout/" method="post">Logout</a>
-                </div>
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="logo">
+                <a href="{% url 'solutions:solution-list' %}" class="logo-text">TECHLOG</a>
             </div>
-            {% else %}
-                <a href="{% url 'users:login' %}" class="nav-link auth-button">Login</a>
-                <a href="{% url 'users:signup' %}" class="nav-link signup-button">Sign up</a>
-            {% endif %}
+            <div class="navbar-center">
+                <form class="search-form" action="/search/" method="get">
+                    <input type="text" name="q" placeholder="Search solutions..." class="search-input">
+                </form>
+            </div>
+            <div class="navbar-right">
+                {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <img src="{{ '/media/user.png' }}" class="dropbtn">
+                    <div class="dropdown-content">
+                        <a href="/{{ request.user.username }}">Profile</a>
+                        <a href="/logout/" method="post">Logout</a>
+                    </div>
+                </div>
+                {% else %}
+                    <a href="{% url 'users:login' %}" class="nav-link auth-button">Login</a>
+                    <a href="{% url 'users:signup' %}" class="nav-link signup-button">Sign up</a>
+                {% endif %}
+            </div>
+        </nav>
+
+        <div class="aside-main">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <ul>
+                    {% if user.is_authenticated %}
+                    <li><a href="{%  url 'solutions:create' %}" class="solution_create">New Solution</a></li>
+                    {% endif %}
+                    <li><a href="{% url 'solutions:solution-list' %}">HOME</a></li>
+                    <li><a href="{% url 'solutions:solution-list' %}">SOLUTIONS</a></li>
+                    <li><a href="#">TAGS</a></li>
+                </ul>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-container">
+                {% block maincontent %}
+                {% endblock maincontent %}
+            </main>
+
+            <aside class="ads-container">
+                <div class="ad-box">
+                    <p>Advertisement</p>
+                </div>
+            </aside>
         </div>
-    </nav>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <ul>
-            {% if user.is_authenticated %}
-            <li><a href="{%  url 'solutions:create' %}" class="solution_create">New Solution</a></li>
-            {% endif %}
-            <li><a href="{% url 'solutions:solution-list' %}">HOME</a></li>
-            <li><a href="{% url 'solutions:solution-list' %}">SOLUTIONS</a></li>
-            <li><a href="#">TAGS</a></li>
-        </ul>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-container">
-        {% block maincontent %}
-        {% endblock maincontent %}
-    </main>
-
-    <footer class="footer">
-        <p>&copy; 2024 TechLog - Cosmic Problems, Simple Solutions</p>
-    </footer>
-    {% block js %}
-    {% endblock js %}
+        <footer class="footer">
+            <p>&copy; 2024 TechLog - Cosmic Problems, Simple Solutions</p>
+        </footer>
+    
+        {% block js %}
+        {% endblock js %}
+    </div>
 </body>
 </html>
