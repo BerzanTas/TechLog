@@ -5,10 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TechLog</title>
+    <meta name="description" content="TechLog - Latest tech tips, guides, and solutions for everyday problems.">
+    <meta property="og:image" content="https://techlog.berzantas.com/static/solutions/media/favicon.ico">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="TechLog">
+    <meta property="og:description" content="TechLog offers the best tech guides and solutions for everyday issues.">
     <link rel="stylesheet" href="{% static 'solutions/css/style.css' %}">
-    <link rel="shortcut icon" type="image/png" href="{% static 'solutions/media/favicon.ico' %}"/>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3547488460887249"
-     crossorigin="anonymous"></script>
+    <link rel="icon" href="{% static 'solutions/media/favicon.ico" type="image/x-icon">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3547488460887249" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="wrapper">
@@ -70,5 +76,14 @@
         {% block js %}
         {% endblock js %}
     </div>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "TechLog",
+  "url": "https://techlog.berzantas.com",
+  "logo": "https://techlog.berzantas.com/static/solutions/media/favicon.ico"
+}
+</script>
 </body>
 </html>
