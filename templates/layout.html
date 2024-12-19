@@ -45,29 +45,40 @@
         </nav>
 
         <div class="aside-main">
-            <!-- Sidebar -->
-            <aside class="sidebar">
-                <ul>
-                    {% if user.is_authenticated %}
-                    <li><a href="{%  url 'solutions:create' %}" class="solution_create">New Solution</a></li>
-                    {% endif %}
-                    <li><a href="{% url 'solutions:solution-list' %}">HOME</a></li>
-                    <li><a href="{% url 'solutions:solution-list' %}">SOLUTIONS</a></li>
-                    <li><a href="#">TAGS</a></li>
-                </ul>
-            </aside>
-
+            <div class="aside-parent">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <ul>
+                        {% if user.is_authenticated %}
+                        <li><a href="{%  url 'solutions:create' %}" class="solution_create">New Solution</a></li>
+                        {% endif %}
+                        <li><a href="{% url 'solutions:solution-list' %}">HOME</a></li>
+                        <li><a href="{% url 'solutions:solution-list' %}">SOLUTIONS</a></li>
+                        <li><a href="#">TAGS</a></li>
+                    </ul>
+                </aside>
+            </div>
             <!-- Main Content -->
             <main class="main-container">
                 {% block maincontent %}
                 {% endblock maincontent %}
             </main>
-
-            <aside class="ads-container">
-                <div class="ad-box">
-                    <p>Advertisement</p>
-                </div>
-            </aside>
+            <div class="aside-parent">
+                <aside class="ads-container">
+                        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3547488460887249"
+                            crossorigin="anonymous"></script>
+                        <!-- ad_box -->
+                        <ins class="adsbygoogle ad_box"
+                            style="display:block"
+                            data-ad-client="ca-pub-3547488460887249"
+                            data-ad-slot="5811613385"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                        <script>
+                            (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                </aside>
+            </div>
         </div>
         <footer class="footer">
             <p>&copy; 2024 TechLog - Cosmic Problems, Simple Solutions</p>
