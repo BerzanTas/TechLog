@@ -1,5 +1,6 @@
 from django.forms import ValidationError
 from django.contrib.auth.models import User
+from django.db.models import Q
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
@@ -17,6 +18,18 @@ class SolutionListCreate(generics.ListCreateAPIView):
             return [permissions.IsAuthenticated()]
         # GET allows everyone
         return [permissions.AllowAny()]
+    
+    def get_queryset(self):
+        query = self.request.query_params.get('q', '').strip()
+        queryset = super().get_queryset()
+        
+        if query:
+            keywords = query.split()
+            query_filter = Q()
+            for keyword in keywords:
+                query_filter |= Q(tags__icontains=keyword)
+            queryset = queryset.filter(query_filter)
+        return queryset
 
     def perform_create(self, serializer):
         # Add the user as an author of solution

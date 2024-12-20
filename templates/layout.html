@@ -13,7 +13,7 @@
     <meta property="og:title" content="TechLog">
     <meta property="og:description" content="TechLog offers the best tech guides and solutions for everyday issues.">
     <link rel="stylesheet" href="{% static 'solutions/css/style.css' %}">
-    <link rel="icon" href="{% static 'solutions/media/favicon.ico' %}" type="image/x-icon">
+    <link rel="icon" href="https://techlog.berzantas.com/static/solutions/media/favicon.ico">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3547488460887249" crossorigin="anonymous"></script>
 </head>
 <body>
@@ -23,11 +23,11 @@
             <div class="logo">
                 <a href="{% url 'solutions:solution-list' %}" class="logo-text">TECHLOG</a>
             </div>
-            <div class="navbar-center">
-                <form class="search-form" action="/search/" method="get">
-                    <input type="text" name="q" placeholder="Search solutions..." class="search-input">
-                </form>
-            </div>
+
+            <form id="search-form" action="/search/" method="get">
+                    <input type="text" name="q" placeholder="Search solutions..." id="search-input">
+            </form>
+
             <div class="navbar-right">
                 {% if user.is_authenticated %}
                 <div class="dropdown">

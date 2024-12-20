@@ -10,6 +10,71 @@
     <script>
         const apiBaseURL = '/api/solutions/';
         const solutionsContainer = document.getElementById('solutions');
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+
+        // Fetch solutions with optional search query
+        const fetchSolutions = async (query = '') => {
+            try {
+                const url = query ? `${apiBaseURL}?q=${encodeURIComponent(query)}` : apiBaseURL;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`Error fetching solutions: ${response.statusText}`);
+                }
+                const solutions = await response.json();
+
+                renderSolutions(solutions);
+            } catch (error) {
+                console.error('Error fetching solutions:', error);
+                solutionsContainer.innerHTML = '<p>Failed to load solutions.</p>';
+            }
+        };
+
+        // Render solutions into the container
+        const renderSolutions = (solutions) => {
+            solutionsContainer.innerHTML = '';
+            if (solutions.length === 0) {
+                solutionsContainer.innerHTML = '<p>No solutions found.</p>';
+                return;
+            }
+            solutions.forEach(solution => {
+                const tagsString = solution.tags || '';
+                const tags = tagsString.split(',').map(tag => tag.trim());
+                const tagsHTML = tags.length > 0
+                    ? tags.map(tag => `<span class="solution-tag">${tag}</span>`).join('')
+                    : '<span class="no-tags">No tags available</span>';
+
+                const solutionElement = document.createElement('div');
+                solutionElement.className = 'solution-card';
+
+                solutionElement.innerHTML = `
+                    <h2 class="solution-title">
+                        <a href="${solution.author}/${solution.slug}/" class="solution-link">${solution.title}</a>
+                    </h2>
+                    <p class="solution-date">Posted on: ${new Date(solution.published_date).toLocaleDateString()}</p>
+                    <p class="solution-author">by ${solution.author}</p>
+                    <p class="solution-snippet">${solution.snippet}</p>
+                    <div class="solution-tags">
+                        ${tagsHTML}
+                    </div>
+                `;
+                solutionsContainer.appendChild(solutionElement);
+            });
+        };
+
+        // Handle search form submission
+        searchForm.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const query = searchInput.value.trim();
+            fetchSolutions(query);
+        });
+
+        // Initial fetch
+        fetchSolutions();
+
+        /*
+        const apiBaseURL = '/api/solutions/';
+        const solutionsContainer = document.getElementById('solutions');
 
         const fetchSolutions = async () => {
             try {
@@ -46,6 +111,9 @@
         };
 
         fetchSolutions();
+        */
+        
     </script>
+    
 {% endblock js %}
 
