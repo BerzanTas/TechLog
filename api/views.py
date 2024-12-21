@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import NotFound
 from solutions.models import Solution, Comment
 from .serializers import SolutionSerializer, CommentSerializer
+import re
 
 class SolutionListCreate(generics.ListCreateAPIView):
     queryset = Solution.objects.all().order_by('-published_date')
@@ -27,7 +28,7 @@ class SolutionListCreate(generics.ListCreateAPIView):
             keywords = query.split()
             query_filter = Q()
             for keyword in keywords:
-                query_filter |= Q(tags__icontains=keyword)
+                query_filter |= Q(tags__regex=r'\b' + re.escape(keyword) + r'\b')
             queryset = queryset.filter(query_filter)
         return queryset
 

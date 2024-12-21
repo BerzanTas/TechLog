@@ -21,8 +21,10 @@
             <div class="sol_details">
                 <p>Author <a href="/{{ solution.author }}">{{ solution.author }}</a></p>
                 <p>Published: {{ solution.published_date}}</p>
-                <p>Last modified: {{ solution.published_date}}</p>
-                <p>Views 187</p>
+                {% if solution.modified_date %}
+                    <p class="solution-modified-date">Last modified: {{ solution.modified_date }}</p>
+                {% endif %}
+                <p>Views {{ solution.views_count }}</p>
             </div>
         </div>
         <div class="markdown-content" id="solution-content">{{ solution.content_html|safe}}</div>

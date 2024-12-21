@@ -2,9 +2,10 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.forms import ValidationError
 from django.utils.text import slugify
-import re
+from django.utils import timezone
 from django.utils.html import strip_tags
 import markdown
+import re
 from PIL import Image
 
 class Solution(models.Model):
@@ -17,13 +18,14 @@ class Solution(models.Model):
     modified_date = models.DateTimeField(null=True, blank=True)
     thumb = models.ImageField(blank=True, null=True)
     author = models.ForeignKey(User, on_delete=models.CASCADE,default=None)
-    tags = models.CharField(max_length=200, blank=True) 
+    views_count = models.IntegerField(default=0)
+    tags = models.CharField(max_length=200, blank=True)
     
     def save(self, *args, **kwargs):
-        # Generowanie HTML z Markdown przy zapisie
+        # Generate HTML from markdown
         self.content_html = markdown.markdown(self.content)
 
-        if not self.pk:  # Jeśli obiekt jest nowy, generuj slug
+        if not self.pk:  # If the object is new, generate slug
             base_slug = slugify(self.title)
             unique_slug = base_slug
             counter = 1
@@ -32,6 +34,9 @@ class Solution(models.Model):
                 unique_slug = f"{base_slug}-{counter}"
                 counter += 1
             self.slug = unique_slug
+
+        if self.pk:  # If object already exist, change modified_date
+            self.modified_date = timezone.now()
 
         super().save(*args, **kwargs)
 

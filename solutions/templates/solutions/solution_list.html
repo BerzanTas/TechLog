@@ -62,15 +62,46 @@
             });
         };
 
-        // Handle search form submission
-        searchForm.addEventListener('submit', (event) => {
-            event.preventDefault();
-            const query = searchInput.value.trim();
-            fetchSolutions(query);
-        });
+        // Update the page title based on the query parameter (if any)
+        const updateTitle = (tag) => {
+            const titleElement = document.querySelector('.page-title');
+            if (tag) {
+                titleElement.textContent = `Solutions for "${tag}"`;
+            } else {
+                titleElement.textContent = 'Latest Solutions';
+            }
+        };
 
-        // Initial fetch
-        fetchSolutions();
+        // Function to get the search query parameter from the URL
+        const getQueryParam = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('q') || '';  // Return the 'q' param or empty string if not present
+        };
+
+        // Fetch solutions based on the query parameter (or empty query if not set)
+        const query = getQueryParam();
+        if (query){
+            updateTitle(query);  // Update the page title based on the query
+        }
+
+        fetchSolutions(query);  // Initial fetch based on the query
+
+        // Handle the search form submission (if applicable)
+        if (searchForm) {
+            searchForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const query = searchInput.value.trim();
+
+                if (query) {
+                    updateTitle(query);
+                    history.pushState(null, '', `?q=${encodeURIComponent(query)}`);
+                } else {
+                    updateTitle();
+                    history.pushState(null, '', '/');
+                }
+                fetchSolutions(query);
+            });
+        }
 
         /*
         const apiBaseURL = '/api/solutions/';
