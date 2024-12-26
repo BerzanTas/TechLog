@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.forms import ValidationError
 from django.utils.text import slugify
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import strip_tags
 import markdown
@@ -46,6 +47,12 @@ class Solution(models.Model):
     def snippet(self):
         plain_text = strip_tags(self.content_html)
         return plain_text[:100] + '...'
+
+    def get_absolute_url(self):
+        return reverse('solutions:detail', kwargs={
+            'username': self.author.username,
+            'slug': self.slug
+        })
     
 class Comment(models.Model):
     solution = models.ForeignKey(Solution, on_delete=models.CASCADE, related_name='comments')
